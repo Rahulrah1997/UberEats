@@ -2,7 +2,7 @@ import streamlit as st
 from ResDataExtract import Data_clean
 import pandas as pd
 
-df = pd.read_csv("Uber_Eats_data.csv")
+df = pd.read_csv("E:/AIML/PojectUberEats/DataSet/Uber_Eats_data.csv")
 QA_df = {'Q1':'Which Bangalore locations have the highest average restaurant ratings?',
          'Q2':'Which locations are over-saturated with restaurants?',
          'Q3':'Does online ordering improve restaurant ratings?',
