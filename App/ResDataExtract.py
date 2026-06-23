@@ -8,7 +8,7 @@ class Data_clean:
     def __init__(self, df_copy: pd.DataFrame):
         self.df = df_copy
         self.conn = None
-       
+        
     def safe_fill(self, series):
 
         valid_values = series.dropna()
@@ -46,9 +46,13 @@ class Data_clean:
         df_copy['listed_in(type)'] = df_copy['listed_in(type)'].str.strip().str.title()
 
         df_copy['approx_cost(for two people)'] = df_copy['approx_cost(for two people)'].str.replace(',', '')
-        df_copy['approx_cost(for two people)'] = df_copy['approx_cost(for two people)'].astype('float')
-        df_copy['approx_cost(for two people)'] = df_copy['approx_cost(for two people)'].round(1).apply(lambda x: f"{x:.1f}")
+        df_copy['approx_cost(for two people)'] = df_copy['approx_cost(for two people)'].astype('int')
+        #df_copy['approx_cost(for two people)'] = df_copy['approx_cost(for two people)'].round(1).apply(lambda x: f"{x:.1f}")
 
+        # sql_column_names = ['rest_name', 'online_order','book_table','rate','votes','phone','location','rest_type',
+        #                         'dish_liked','cuisines','approx_cost','listed_in_type','listed_in_city','country_code' ] 
+        # df_copy.columns = sql_column_names
+        
         return df_copy
 
     def MobileNo_Clean(self, mobileNo):
@@ -89,6 +93,9 @@ class Data_clean:
 
         df_copy[['country_code', 'phone']] = df_copy['phone'].apply(self.MobileNo_Clean)
 
+        df_copy = df_copy.rename(columns={'name': 'rest_name', 'approx_cost(for two people)': 'approx_cost',
+                                          'listed_in(type)':'listed_in_type','listed_in(city)':'listed_in_city'})
+
         return df_copy
     
     def insert_sql(self):
@@ -100,11 +107,11 @@ class Data_clean:
         df_copy = self.CleanData()
 
         try:
-
+            
             cursor.execute("Begin")
 
             cursor.execute('''CREATE TABLE IF NOT EXISTS restaurant_details(
-                        id INTEGER PRIMARY KEY, rest_name TEXT, online_order VARCHAR(3), 
+                        id INTEGER AUTO_INCREMENT PRIMARY KEY, rest_name TEXT, online_order VARCHAR(3), 
                         book_table VARCHAR(3), rate REAL, votes REAL, phone TEXT,location TEXT,rest_type TEXT,
                         dish_liked TEXT, cuisines TEXT, approx_cost TEXT, listed_in_type TEXT, listed_in_city TEXT, country_code VARCHAR(3))''')
 
@@ -113,7 +120,7 @@ class Data_clean:
             self.conn.commit()
 
         except sqlite3.Error as err:
-
+            
             self.conn.rollback()
 
             print(err)
