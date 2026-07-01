@@ -2,10 +2,12 @@ import pandas as pd
 import numpy as np
 import re
 import sqlite3
+import json
 
 class Data_clean:
 
-    def __init__(self, df_copy: pd.DataFrame):
+    def __init__(self, df_copy: pd.DataFrame,jsonfile):
+        self.jsonfile = jsonfile
         self.df = df_copy
         self.conn = None
         
@@ -98,11 +100,28 @@ class Data_clean:
 
         return df_copy
     
+    def jsonextract(self,jsonfile):
+        with open(jsonfile,"r",encoding="utf-8")as file:
+            order_data = json.load(file)
+            bulkorderdata_df = pd.DataFrame(order_data,columns=['order_id','restaurant_name','order_date','order_value','discount_used','payment_method'])
+
+        return bulkorderdata_df
+
+
+
+    
+    def init_sql(self):
+
+        self.conn = sqlite3.connect('ubereats.db')
+        return self.conn
+
+    
     def insert_sql(self):
 
         self.conn = sqlite3.connect('ubereats.db')
+        cursor = self.init_sql.conn.cursor()
 
-        cursor = self.conn.cursor()
+        #cursor = self.conn.cursor()
 
         df_copy = self.CleanData()
 
@@ -126,3 +145,28 @@ class Data_clean:
             print(err)
 
         return self.conn
+    
+    def insert_json(self,jsonfile):
+
+        self.conn = sqlite3.connect('ubereats.db')
+        cursor = self.init_sql.conn.cursor()
+        bulkorderdata_df = self.jsonextract(jsonfile)
+
+        try:
+            cursor.execute("Begin")
+            cursor.execute('''
+                                CREATE TABLE IF NOT EXISTS order_details(
+                                id INTEGER PRIMARY KEY, order_id TEXT, restaurant_name TEXT, 
+                                order_date DATE, order_value REAL, discount_used TEXT, payment_method TEXT)''')
+
+        
+
+            bulkorderdata_df.to_sql('order_details',self.conn,if_exists='replace',index=False)
+
+            self.conn.commit()
+
+        except sqlite3.Error as err:
+            self.conn.rollback()
+
+        return self.conn
+            
