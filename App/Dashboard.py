@@ -3,9 +3,8 @@ from ResDataExtract import Data_clean
 import pandas as pd
 import datetime
 
-# df = pd.read_csv("E:/AIML/PojectUberEats/DataSet/Uber_Eats_data.csv")
-df = pd.read_csv("D:/Rahul/AIML/Uber_Eats_data.csv")
-jsonfile = "D:/Rahul/AIML/orders.json"
+df = pd.read_csv("E:/AIML/PojectUberEats/DataSet/Uber_Eats_data.csv")
+jsonfile = "E:/AIML/PojectUberEats/DataSet/orders.json"
 
 QA_df = {'Q1':'1. Which Bangalore locations have the highest average restaurant ratings?',
          'Q2':'2. Which locations are over-saturated with restaurants?',
