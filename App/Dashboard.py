@@ -3,8 +3,9 @@ from ResDataExtract import Data_clean
 import pandas as pd
 import datetime
 
-df = pd.read_csv("E:/AIML/PojectUberEats/DataSet/Uber_Eats_data.csv")
-jsonfile = "E:/AIML/PojectUberEats/DataSet/orders.json"
+# df = pd.read_csv("E:/AIML/PojectUberEats/DataSet/Uber_Eats_data.csv")
+df = pd.read_csv("Uber_Eats_data.csv")
+jsonfile = "orders.json"
 
 QA_df = {'Q1':'1. Which Bangalore locations have the highest average restaurant ratings?',
          'Q2':'2. Which locations are over-saturated with restaurants?',
@@ -96,6 +97,8 @@ if PageSelection == 'OrderDetails':
 
             from_date = search_values.get('fromdate')
             to_date = search_values.get('todate')
+            dis_selection = search_values.get('discount_selection')
+            pay_selection = search_values.get('payment_selection')
 
             if search_values.get('res_selection')is not None:
                 query += "AND restaurant_name =?"                
@@ -116,6 +119,18 @@ if PageSelection == 'OrderDetails':
                 query += "AND order_date = ?"                   
                 params.append(search_values['todate'])
 
+            if  dis_selection:
+
+                placeholders_dis = ", ".join(["?"] * len(dis_selection))               
+                query += f"AND discount_used In ({placeholders_dis})"
+                params.extend(dis_selection)
+
+            if pay_selection :
+
+                placeholders_pay = ", ".join(["?"] * len(pay_selection))               
+                query += f"AND payment_method In ({placeholders_pay})"
+                params.extend(pay_selection)
+
 
             answer = pd.read_sql(query,getdata.conn,params=params)
             st.dataframe(answer,hide_index=True)
@@ -129,22 +144,25 @@ if PageSelection == 'OrderDetails':
             
 if PageSelection == 'Filter Page':
 
-    st.header("Search Your Favourite Foods and Restaurant")
+    st.header(body="Search Your Favourite Foods and Restaurant",text_alignment='center',divider='green')
 
     query = "select distinct location from restaurant_details"
     loc_fetch = pd.read_sql(query,getdata.conn)
-    loc_selection = st.selectbox("Where would you like to eat:",loc_fetch, index=None,placeholder="Select Location")
+    st.subheader("Where would you like to eat:")
+    loc_selection = st.selectbox(label="",options=loc_fetch, index=None,placeholder="Select Location")
 
     if loc_selection:
 
         query = "select distinct listed_in_city from restaurant_details where location=:loc_selection"
         city_fetch = pd.read_sql(query,getdata.conn,params={'loc_selection':loc_selection})
-        City_selection = st.selectbox("Select the city:",city_fetch,index=None,placeholder="Select City")
+        st.subheader("Select the city:")
+        City_selection = st.selectbox("",city_fetch,index=None,placeholder="Select City")
 
         if City_selection:
             query = "select distinct rest_type from restaurant_details where location=:loc_selection and listed_in_city =:City_selection"
             restype_fetch = pd.read_sql(query,getdata.conn,params={'loc_selection':loc_selection,'City_selection':City_selection})
-            restype_selection = st.multiselect(label="Select Your Favourite Restaurant Type",options=restype_fetch)
+            st.subheader("Select Your Favourite Restaurant Type")
+            restype_selection = st.multiselect(label="",options=restype_fetch)
 
             
      
@@ -166,9 +184,11 @@ if PageSelection == 'Filter Page':
 
 if PageSelection == 'Q&A Page':
 
-    st.title("Q&A Page")
+    st.header("Q&A Page",text_alignment='center',divider='green')
 
-    qn_selection = st.selectbox("Select Question",QA_df.values())
+    st.subheader("Select Question")
+
+    qn_selection = st.selectbox("",QA_df.values(),index=None, placeholder='Select the Question')
 
 
     if qn_selection == QA_df['Q1']:
@@ -212,12 +232,12 @@ if PageSelection == 'Q&A Page':
 
     if qn_selection == QA_df['Q5']:
 
-        s_query = "select approx_cost from restaurant_details"
+        s_query = "select approx_cost from restaurant_details LIMIT 1"
         q_details = pd.read_sql(s_query,getdata.conn)
         q1 = q_details['approx_cost'].quantile(0.25)
         q2 = q_details['approx_cost'].quantile(0.50)
         q3 = q_details['approx_cost'].quantile(0.75)
-
+     
         query = """SELECT CASE
             WHEN approx_cost <= :q1 THEN '1. Budget (Under ₹:'||:q1||')'
             WHEN approx_cost > :q1 and approx_cost<= :q2 THEN '2. Mid-Range (₹:'||:q1||' - '||:q2||')'
