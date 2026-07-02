@@ -47,13 +47,10 @@ class Data_clean:
         df_copy['rest_type'] = df_copy['rest_type'].str.replace(r'\s*,\s*', ',', regex=True)
         df_copy['listed_in(type)'] = df_copy['listed_in(type)'].str.strip().str.title()
 
-        df_copy['approx_cost(for two people)'] = df_copy['approx_cost(for two people)'].str.replace(',', '')
+        df_copy['approx_cost(for two people)'] = df_copy['approx_cost(for two people)'].str.replace(',','')
+        df_copy['approx_cost(for two people)'] = pd.to_numeric(df_copy['approx_cost(for two people)'],errors='coerce')
         df_copy['approx_cost(for two people)'] = df_copy['approx_cost(for two people)'].astype('int')
         #df_copy['approx_cost(for two people)'] = df_copy['approx_cost(for two people)'].round(1).apply(lambda x: f"{x:.1f}")
-
-        # sql_column_names = ['rest_name', 'online_order','book_table','rate','votes','phone','location','rest_type',
-        #                         'dish_liked','cuisines','approx_cost','listed_in_type','listed_in_city','country_code' ] 
-        # df_copy.columns = sql_column_names
         
         return df_copy
 
@@ -107,9 +104,6 @@ class Data_clean:
 
         return bulkorderdata_df
 
-
-
-    
     def init_sql(self):
 
         self.conn = sqlite3.connect('ubereats.db')
